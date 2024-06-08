@@ -1,1 +1,1 @@
-## Wand and Beyond @ UmmaHueslaHackathon2024
+## Wand and Beyond @UmmaHueslaHackathon2024
