@@ -1,6 +1,8 @@
 import asyncio
 
+import cv2
 import mouse
+import numpy as np
 from bleak import BleakClient, BleakScanner
 
 DEVICE_ADDRESS = "64:E8:33:88:51:AE"
@@ -20,13 +22,13 @@ async def listen_to_device():
         last_id = -1
         while wand.is_connected:
             string_value = bytes(await wand.read_gatt_char(CHARACTERISTIC_UUID))
-            string_value = string_value[1::]
-            print(string_value)
+            string_value = string_value.decode('UTF-8')
+            # print(string_value)
 
-            values = string_value.split(",")
-            value_id, ax, ay, az, gx, gy, gz, button_state = values[0]
-            if not value_id == last_id:
-                print(gx, gy)
+            values = string_value.split(",") # -40 40   -50 50 left
+            value_id, roll, pitch, yaw, button_state = values
+
+            print(pitch, yaw)
 
 
 async def check_device_serices():
@@ -61,9 +63,25 @@ def test_mouse():
 
 
 def move_mouse(x, y):
-    mouse.move(x, y, absolute=False, duration=0.1)
+    mouse.move(x, y, absolute=True, duration=0.0)
+
+
+def check_transformation():
+    wand_corners = np.float32([[50, -40], [-50, -40], [-50, 40]])
+    screen_corners = np.float32([[0, 0], [1920 * 0.667, 0], [1920 * 0.667, 1080 * 0.667]])
+    affine_transformation_matrix = cv2.getAffineTransform(wand_corners, screen_corners)
+    mouse_initial_position = cv2.transform(np.array([np.float32([[float(0), float(0)]])]),
+                                           affine_transformation_matrix)[0][0]
+    move_mouse(mouse_initial_position[0], mouse_initial_position[1])
+    print(mouse_initial_position)
+
 
 
 if __name__ == '__main__':
     # asyncio.run(get_device())
-    asyncio.run(listen_to_device())
+    # asyncio.run(listen_to_device())
+    check_transformation()
+    # button_value = '0'
+    # button_state = False if button_value == "0" else True
+    # print(button_state)
+
